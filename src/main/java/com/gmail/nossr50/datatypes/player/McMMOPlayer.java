@@ -571,9 +571,9 @@ public class McMMOPlayer implements Identified {
         int powerLevel = 0;
 
         for (PrimarySkillType primarySkillType : SkillTools.NON_CHILD_SKILLS) {
-            if (mcMMO.p.getSkillTools().doesPlayerHaveSkillPermission(player, primarySkillType)) {
+            //if (mcMMO.p.getSkillTools().doesPlayerHaveSkillPermission(player, primarySkillType)) {
                 powerLevel += getSkillLevel(primarySkillType);
-            }
+            //}
         }
 
         return powerLevel;
