@@ -1,3 +1,28 @@
+Version 2.1.210
+    Fixed a memory leak involving mob metadata
+
+    NOTES:
+    There was a big rewrite in this update relating to how various types of metadata were being tracked/stored/retrieved
+    If you run into issues with this version of mcMMO, please post about it on GitHub
+
+Version 2.1.209
+    Fixed a bug where some config files did not get trimmed completely
+
+    NOTES:
+    This should fix the issue for everyone, let me know if you still run into trouble!
+    Don't be afraid to ping me on discord
+
+Version 2.1.208
+    Significantly rewrote to how mcMMO loads/updates config files
+    Fixed a bug where huge config files caused the server to take forever to start/shutdown
+    Fixed config files duplicating comments and updated their code to use Spigot API (thanks the456gamer)
+    mcMMO now repairs config files (removing duplicate comments, see notes)
+    Updated lithuanian locale (thanks dexasz)
+
+    NOTES:
+    Due to a change in Spigot mcMMO started growing config files at an alarming rate until they became so big they wouldn't load, and well before they got to that stage they slowed down loading the server
+    mcMMO now uses the Spigot API in a smarter way for config files
+
 Version 2.1.207
     Fixed an IndexOutOfBounds exception with our BlockTracker
     Fixed a bug where leveling up a party at level cap would spam the chat with messages
