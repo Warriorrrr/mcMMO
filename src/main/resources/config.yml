@@ -577,7 +577,7 @@ Bonus_Drops:
         Netherrack: true
         Obsidian: true
         Nether_Quartz_Ore: true
-        Nether_Quartz: true
+        Quartz: true
         Redstone_Ore: true
         Redstone: true
         Redstone_Dust: true
@@ -609,6 +609,8 @@ Bonus_Drops:
         Jungle_Log: true
         Spruce_Wood: true
         Spruce_Log: true
+        Mangrove_Wood: true
+        Mangrove_Log: true
     Smelting:
         Iron_Ingot: true
         Gold_Ingot: true

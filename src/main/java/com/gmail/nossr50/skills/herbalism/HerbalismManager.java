@@ -88,10 +88,8 @@ public class HerbalismManager extends SkillManager {
                 mmoPlayer.getPlayer().sendMessage("Processing sweet berry bush rewards");
             }
             //Check the age
-            if(blockState.getBlockData() instanceof Ageable) {
+            if(blockState.getBlockData() instanceof Ageable ageable) {
                 int rewardByAge = 0;
-
-                Ageable ageable = (Ageable) blockState.getBlockData();
 
                 if(ageable.getAge() == 2) {
                     rewardByAge = 1; //Normal XP
@@ -134,8 +132,7 @@ public class HerbalismManager extends SkillManager {
             BlockState blockState = block.getState();
 
             if(blockState.getType().toString().equalsIgnoreCase("sweet_berry_bush")) {
-                if(blockState.getBlockData() instanceof Ageable) {
-                    Ageable ageable = (Ageable) blockState.getBlockData();
+                if(blockState.getBlockData() instanceof Ageable ageable) {
 
                     if(ageable.getAge() <= 1) {
                         applyXpGain(xpReward, XPGainReason.PVE, XPGainSource.SELF);
@@ -351,8 +348,7 @@ public class HerbalismManager extends SkillManager {
                  */
 
                 //Not all things that are natural should give double drops, make sure its fully mature as well
-                if(plantData instanceof Ageable) {
-                    Ageable ageable = (Ageable) plantData;
+                if(plantData instanceof Ageable ageable) {
 
                     if(isAgeableMature(ageable) || isBizarreAgeable(plantData)) {
                         if(checkDoubleDrop(brokenPlantState)) {
@@ -447,8 +443,7 @@ public class HerbalismManager extends SkillManager {
                  */
 
                 //Calculate XP
-                if(plantData instanceof Ageable) {
-                    Ageable plantAgeable = (Ageable) plantData;
+                if(plantData instanceof Ageable plantAgeable) {
 
                     if(isAgeableMature(plantAgeable) || isBizarreAgeable(plantData)) {
                         xpToReward += ExperienceConfig.getInstance().getXp(PrimarySkillType.HERBALISM, brokenBlockNewState.getType());
@@ -583,7 +578,7 @@ public class HerbalismManager extends SkillManager {
         if (isChorusBranch(brokenBlock.getType())) {
             brokenBlocks = getBrokenChorusBlocks(brokenBlock);
         } else {
-            brokenBlocks = getBlocksBrokenAbove(brokenBlock, false);
+            brokenBlocks = getBlocksBrokenAboveOrBelow(brokenBlock, false, mcMMO.getMaterialMapStore().isMultiBlockHangingPlant(brokenBlock.getType()));
         }
 
         return brokenBlocks;
@@ -604,9 +599,11 @@ public class HerbalismManager extends SkillManager {
      * Multi-block plants are hard-coded and kept in {@link MaterialMapStore}
      *
      * @param originBlock The point of the "break"
+     * @param inclusive Whether to include the origin block
+     * @param below Whether to search down instead of up.
      * @return A set of blocks above the target block which can be assumed to be broken
      */
-    private HashSet<Block> getBlocksBrokenAbove(BlockState originBlock, boolean inclusive) {
+    private HashSet<Block> getBlocksBrokenAboveOrBelow(BlockState originBlock, boolean inclusive, boolean below) {
         HashSet<Block> brokenBlocks = new HashSet<>();
         Block block = originBlock.getBlock();
 
@@ -617,16 +614,18 @@ public class HerbalismManager extends SkillManager {
         //Limit our search
         int maxHeight = 512;
 
+        final BlockFace relativeFace = below ? BlockFace.DOWN : BlockFace.UP;
+
         // Search vertically for multi-block plants, exit early if any non-multi block plants
         for (int y = 0; y < maxHeight; y++) {
             //TODO: Should this grab state? It would be more expensive..
-            Block relativeUpBlock = block.getRelative(BlockFace.UP, y);
+            Block relativeBlock = block.getRelative(relativeFace, y);
 
             //Abandon our search if the block isn't multi
-            if(!mcMMO.getMaterialMapStore().isMultiBlockPlant(relativeUpBlock.getType()))
+            if (isOneBlockPlant(relativeBlock.getType()))
                 break;
 
-            brokenBlocks.add(relativeUpBlock);
+            brokenBlocks.add(relativeBlock);
         }
 
         return brokenBlocks;
@@ -639,7 +638,7 @@ public class HerbalismManager extends SkillManager {
      * @return true if the block is not contained in the collection of multi-block plants
      */
     private boolean isOneBlockPlant(Material material) {
-        return !mcMMO.getMaterialMapStore().isMultiBlockPlant(material);
+        return !mcMMO.getMaterialMapStore().isMultiBlockPlant(material) && !mcMMO.getMaterialMapStore().isMultiBlockHangingPlant(material);
     }
 
     /**
@@ -764,11 +763,9 @@ public class HerbalismManager extends SkillManager {
 
         BlockData blockData = blockState.getBlockData();
 
-        if (!(blockData instanceof Ageable)) {
+        if (!(blockData instanceof Ageable ageable)) {
             return false;
         }
-
-        Ageable ageable = (Ageable) blockData;
 
         //If the ageable is NOT mature and the player is NOT using a hoe, abort
 

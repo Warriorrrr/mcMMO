@@ -144,6 +144,11 @@ public final class Permissions {
             || getCachedPermission(permissible, "mcmmo.perks.xp.50percentboost." + skill.toString().toLowerCase(Locale.ENGLISH));
     }
 
+    public static boolean oneAndAQuarterXp(Permissible permissible, PrimarySkillType skill) {
+        return getCachedPermission(permissible, "mcmmo.perks.xp.25percentboost.all")
+                || getCachedPermission(permissible, "mcmmo.perks.xp.25percentboost." + skill.toString().toLowerCase(Locale.ENGLISH));
+    }
+
     public static boolean oneAndOneTenthXp(Permissible permissible, PrimarySkillType skill) {
         return getCachedPermission(permissible, "mcmmo.perks.xp.10percentboost.all")
             || getCachedPermission(permissible, "mcmmo.perks.xp.10percentboost." + skill.toString().toLowerCase(Locale.ENGLISH));

@@ -388,7 +388,10 @@ public class BlockListener implements Listener {
         }
 
         /* MINING */
-        else if (BlockUtils.affectedBySuperBreaker(blockState) && ItemUtils.isPickaxe(heldItem) && mcMMO.p.getSkillTools().doesPlayerHaveSkillPermission(player, PrimarySkillType.MINING) && !mcMMO.getPlaceStore().isTrue(blockState)) {
+        else if (BlockUtils.affectedBySuperBreaker(blockState)
+                && (ItemUtils.isPickaxe(heldItem) || ItemUtils.isHoe(heldItem))
+                && mcMMO.p.getSkillTools().doesPlayerHaveSkillPermission(player, PrimarySkillType.MINING)
+                && !mcMMO.getPlaceStore().isTrue(blockState)) {
             MiningManager miningManager = mcMMOPlayer.getMiningManager();
             miningManager.miningBlockCheck(blockState);
         }
@@ -696,9 +699,8 @@ public class BlockListener implements Listener {
                     player.sendMessage("[mcMMO DEBUG] World Guard xp flag is not permitted for this player in this region");
             }
 
-            if(blockState instanceof Furnace)
+            if(blockState instanceof Furnace furnace)
             {
-                Furnace furnace = (Furnace) blockState;
                 if(mcMMO.getSmeltingTracker().isFurnaceOwned(furnace))
                 {
                     player.sendMessage("[mcMMO DEBUG] This furnace has a registered owner");

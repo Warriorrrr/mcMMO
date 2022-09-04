@@ -24,6 +24,7 @@ public class MaterialMapStore {
     private final @NotNull HashSet<String> blockCrackerWhiteList;
     private final @NotNull HashSet<String> canMakeShroomyWhiteList;
     private final @NotNull HashSet<String> multiBlockPlant;
+    private final @NotNull HashSet<String> multiBlockHangingPlant;
     private final @NotNull HashSet<String> foodItemWhiteList;
     private final @NotNull HashSet<String> glassBlocks;
 
@@ -71,6 +72,7 @@ public class MaterialMapStore {
         blockCrackerWhiteList = new HashSet<>();
         canMakeShroomyWhiteList = new HashSet<>();
         multiBlockPlant = new HashSet<>();
+        multiBlockHangingPlant = new HashSet<>();
         foodItemWhiteList = new HashSet<>();
         glassBlocks = new HashSet<>();
 
@@ -121,6 +123,7 @@ public class MaterialMapStore {
         fillBlockCrackerWhiteList();
         fillShroomyWhiteList();
         fillMultiBlockPlantSet();
+        fillMultiBlockHangingPlantSet();
         fillFoodWhiteList();
         fillGlassBlockWhiteList();
         fillArmors();
@@ -135,6 +138,10 @@ public class MaterialMapStore {
     public boolean isMultiBlockPlant(@NotNull Material material)
     {
         return multiBlockPlant.contains(material.getKey().getKey());
+    }
+
+    public boolean isMultiBlockHangingPlant(@NotNull Material material) {
+        return multiBlockHangingPlant.contains(material.getKey().getKey());
     }
 
     public boolean isAbilityActivationBlackListed(@NotNull Material material)
@@ -230,6 +237,9 @@ public class MaterialMapStore {
         intendedToolPickAxe.addAll(ores);
 
         intendedToolPickAxe.add("lapis_lazuli_ore");
+        intendedToolPickAxe.add("packed_mud");
+        intendedToolPickAxe.add("mud_bricks");
+        intendedToolPickAxe.add("reinforced_deepslate");
         intendedToolPickAxe.add("ice");
         intendedToolPickAxe.add("packed_ice");
         intendedToolPickAxe.add("blue_ice");
@@ -974,8 +984,12 @@ public class MaterialMapStore {
         multiBlockPlant.add("large_fern");
         multiBlockPlant.add("tall_grass");
         multiBlockPlant.add("bamboo");
-        multiBlockPlant.add("weeping_vines_plant");
-        multiBlockPlant.add("twisted_vines_plant");
+    }
+
+    private void fillMultiBlockHangingPlantSet() {
+        multiBlockHangingPlant.add("weeping_vines_plant");
+        multiBlockHangingPlant.add("twisted_vines_plant");
+        multiBlockHangingPlant.add("cave_vines_plant");
     }
 
     private void fillShroomyWhiteList()
@@ -1010,6 +1024,8 @@ public class MaterialMapStore {
         treeFellerDestructibleWhiteList.add("spruce_leaves");
         treeFellerDestructibleWhiteList.add("azalea_leaves");
         treeFellerDestructibleWhiteList.add("flowering_azalea_leaves");
+        treeFellerDestructibleWhiteList.add("mangrove_leaves");
+        treeFellerDestructibleWhiteList.add("mangrove_roots");
         treeFellerDestructibleWhiteList.add("nether_wart_block");
         treeFellerDestructibleWhiteList.add("warped_wart_block");
         treeFellerDestructibleWhiteList.add("brown_mushroom_block");
@@ -1155,8 +1171,6 @@ public class MaterialMapStore {
     
     private void fillToolBlackList()
     {
-        //TODO: Add anvils / missing logs
-        //TODO: Reorganize this list, can we also dynamically populate some of this?
         toolBlackList.add("black_bed");
         toolBlackList.add("blue_bed");
         toolBlackList.add("brown_bed");
@@ -1265,6 +1279,9 @@ public class MaterialMapStore {
         toolBlackList.add("stripped_oak_wood");
         toolBlackList.add("stripped_spruce_log");
         toolBlackList.add("stripped_spruce_wood");
+        toolBlackList.add("mangrove_wood");
+        toolBlackList.add("mangrove_log");
+        toolBlackList.add("stripped_mangrove_log");
         toolBlackList.add("acacia_log");
         toolBlackList.add("acacia_wood");
         toolBlackList.add("birch_log");

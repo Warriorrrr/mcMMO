@@ -8,7 +8,6 @@ import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.datatypes.skills.SubSkillType;
 import com.gmail.nossr50.datatypes.skills.subskills.taming.CallOfTheWildType;
 import com.gmail.nossr50.events.McMMOReplaceVanillaTreasureEvent;
-import com.gmail.nossr50.events.fake.FakePlayerAnimationEvent;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.party.ShareHandler;
@@ -119,9 +118,8 @@ public class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityDamageByEntityHighest(EntityDamageByEntityEvent event) {
         // we only care about players as this is for fixing player death messages
-        if (!(event.getEntity() instanceof Player))
+        if (!(event.getEntity() instanceof Player player))
             return;
-        Player player = (Player) event.getEntity();
 
         // get the attacker
         LivingEntity attacker;
@@ -413,9 +411,8 @@ public class PlayerListener implements Listener {
             {
                 event.setExpToDrop(0);
 
-                if(caught instanceof Item)
+                if(caught instanceof Item caughtItem)
                 {
-                    Item caughtItem = (Item) caught;
                     caughtItem.remove();
                 }
 
@@ -430,7 +427,9 @@ public class PlayerListener implements Listener {
                     ItemStack inHand = player.getInventory().getItemInMainHand();
 
                     //Grab lure level
-                    if(inHand != null && inHand.getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
+                    if(inHand != null
+                            && inHand.getItemMeta() != null
+                            && inHand.getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
                         if(inHand.getItemMeta().hasEnchants()) {
                             for(Enchantment enchantment : inHand.getItemMeta().getEnchants().keySet()) {
                                 if(enchantment.toString().toLowerCase().contains("lure")) {
@@ -438,10 +437,14 @@ public class PlayerListener implements Listener {
                                 }
                             }
                         }
-                    }
 
-                    fishingManager.masterAngler(event.getHook(), lureLevel);
-                    fishingManager.setFishingTarget();
+                    // Prevent any potential odd behavior by only processing if no offhand fishing rod is present
+                    if(!player.getInventory().getItemInOffHand().getType().getKey().getKey().equalsIgnoreCase("fishing_rod")) {
+                        // In case of offhand fishing rod, don't process anything
+                        fishingManager.masterAngler(event.getHook(), lureLevel);
+                        fishingManager.setFishingTarget();
+                    }
+                }
                 }
                 return;
             case CAUGHT_FISH:
@@ -489,9 +492,8 @@ public class PlayerListener implements Listener {
             return;
         }
 
-        if(event.getEntity() instanceof Player)
+        if(event.getEntity() instanceof Player player)
         {
-            Player player = (Player) event.getEntity();
 
             /* WORLD GUARD MAIN FLAG CHECK */
             if(WorldGuardUtils.isWorldGuardLoaded())
@@ -838,17 +840,18 @@ public class PlayerListener implements Listener {
 
                 HerbalismManager herbalismManager = mcMMOPlayer.getHerbalismManager();
 
-                FakePlayerAnimationEvent fakeSwing = new FakePlayerAnimationEvent(event.getPlayer()); //PlayerAnimationEvent compat
+                // FakePlayerAnimationEvent fakeSwing = new FakePlayerAnimationEvent(event.getPlayer(), PlayerAnimationType.ARM_SWING); //PlayerAnimationEvent compat
                 if(!event.isCancelled() || event.useInteractedBlock() != Event.Result.DENY) {
                     //TODO: Is this code to set false from bone meal even needed? I'll have to double check later.
                     if (heldItem.getType() == Material.BONE_MEAL) {
-                        switch (blockState.getType()) {
-                            case BEETROOTS:
-                            case CARROT:
-                            case COCOA:
-                            case WHEAT:
-                            case NETHER_WART_BLOCK:
-                            case POTATO:
+                        switch (blockState.getType().toString()) {
+                            case "BEETROOTS":
+                            case "CARROT":
+                            case "COCOA":
+                            case "WHEAT":
+                            case "NETHER_WART_BLOCK":
+                            case "POTATO":
+                            case "MANGROVE_PROPAGULE":
                                 mcMMO.getPlaceStore().setFalse(blockState);
                                 break;
                         }
@@ -857,7 +860,7 @@ public class PlayerListener implements Listener {
                     if (herbalismManager.canGreenThumbBlock(blockState)) {
                         //call event for Green Thumb Block
                         if(!EventUtils.callSubSkillBlockEvent(player, SubSkillType.HERBALISM_GREEN_THUMB, block).isCancelled()) {
-                            Bukkit.getPluginManager().callEvent(fakeSwing);
+                            // Bukkit.getPluginManager().callEvent(fakeSwing);
                             player.getInventory().getItemInMainHand().setAmount(heldItem.getAmount() - 1);
                             player.updateInventory();
                             if (herbalismManager.processGreenThumbBlocks(blockState) && EventUtils.simulateBlockBreak(block, player, false)) {
@@ -868,7 +871,7 @@ public class PlayerListener implements Listener {
                     /* SHROOM THUMB CHECK */
                     else if (herbalismManager.canUseShroomThumb(blockState)) {
                         if(!EventUtils.callSubSkillBlockEvent(player, SubSkillType.HERBALISM_SHROOM_THUMB, block).isCancelled()) {
-                            Bukkit.getPluginManager().callEvent(fakeSwing);
+                            // Bukkit.getPluginManager().callEvent(fakeSwing);
                             event.setCancelled(true);
                             if (herbalismManager.processShroomThumb(blockState)
                                     && EventUtils.simulateBlockBreak(block, player, false)) {
@@ -1013,8 +1016,7 @@ public class PlayerListener implements Listener {
          *  We can check for an instance instead of EntityType here, so we are
          *  ready for the infamous "Glow Item Frame" in 1.17 too!
          */
-        if (event.getRightClicked() instanceof ItemFrame) {
-            ItemFrame frame = (ItemFrame) event.getRightClicked();
+        if (event.getRightClicked() instanceof ItemFrame frame) {
 
             // Check for existing items (ignore rotations)
             if (frame.getItem().getType() != Material.AIR) {
