@@ -60,8 +60,10 @@ public class DelayedCropReplant extends BukkitRunnable {
             wasImmaturePlant = true;
         }
 
-        //Two kinds of air in Minecraft
-        if(currentState.getType().equals(cropMaterial) || currentState.getType().equals(Material.AIR) || currentState.getType().equals(Material.CAVE_AIR)) {
+        Material currentMaterial = currentState.getType();
+
+        //Three kinds of air in Minecraft
+        if (currentMaterial == cropMaterial || currentMaterial == Material.AIR || currentMaterial == Material.CAVE_AIR || currentMaterial == Material.VOID_AIR) {
 //            if(currentState.getBlock().getRelative(BlockFace.DOWN))
             //The space is not currently occupied by a block so we can fill it
             cropBlock.setType(cropMaterial);
@@ -79,9 +81,8 @@ public class DelayedCropReplant extends BukkitRunnable {
                 //Otherwise make the plant the desired age
             }
 
-            if(newData instanceof Directional) {
+            if(newData instanceof Directional directional && cropFace != null) {
                 //Cocoa Version
-                Directional directional = (Directional) newState.getBlockData();
                 directional.setFacing(cropFace);
 
                 newState.setBlockData(directional);
@@ -92,9 +93,10 @@ public class DelayedCropReplant extends BukkitRunnable {
             }
 
             //Age the crop
-            Ageable ageable = (Ageable) newState.getBlockData();
-            ageable.setAge(age);
-            newState.setBlockData(ageable);
+            if (newState.getBlockData() instanceof Ageable ageable) {
+                ageable.setAge(age);
+                newState.setBlockData(ageable);
+            }
 
 
             newState.update(true, true);
