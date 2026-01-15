@@ -1199,22 +1199,7 @@ public class McMMOPlayer implements Identified {
      *
      * @param syncSave if true, data is saved synchronously
      */
-    public void logout(boolean syncSave) {
-        final Player thisPlayer = getPlayer();
-        if (getPlayer() != null && getPlayer().hasMetadata(
-                MetadataConstants.METADATA_KEY_RUPTURE)) {
-            final RuptureTaskMeta ruptureTaskMeta
-                    = (RuptureTaskMeta) getPlayer().getMetadata(
-                    MetadataConstants.METADATA_KEY_RUPTURE).get(0);
-            if (ruptureTaskMeta != null) {
-                final RuptureTask ruptureTimerTask = ruptureTaskMeta.getRuptureTimerTask();
-                if (ruptureTimerTask != null) {
-                    ruptureTimerTask.cancel();
-                }
-                getPlayer().removeMetadata(MetadataConstants.METADATA_KEY_RUPTURE, mcMMO.p);
-            }
-        }
-
+    public void logout(final Player thisPlayer, boolean syncSave) {
         cleanup();
 
         if (syncSave) {

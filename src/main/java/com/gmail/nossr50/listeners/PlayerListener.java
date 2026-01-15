@@ -3,6 +3,7 @@ package com.gmail.nossr50.listeners;
 import com.gmail.nossr50.config.WorldBlacklist;
 import com.gmail.nossr50.config.experience.ExperienceConfig;
 import com.gmail.nossr50.datatypes.chat.ChatChannel;
+import com.gmail.nossr50.datatypes.meta.RuptureTaskMeta;
 import com.gmail.nossr50.datatypes.player.McMMOPlayer;
 import com.gmail.nossr50.datatypes.skills.PrimarySkillType;
 import com.gmail.nossr50.datatypes.skills.SubSkillType;
@@ -12,6 +13,7 @@ import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.runnables.MobHealthDisplayUpdaterTask;
 import com.gmail.nossr50.runnables.player.PlayerProfileLoadingTask;
+import com.gmail.nossr50.runnables.skills.RuptureTask;
 import com.gmail.nossr50.skills.fishing.FishingManager;
 import com.gmail.nossr50.skills.herbalism.HerbalismManager;
 import com.gmail.nossr50.skills.mining.MiningManager;
@@ -603,6 +605,17 @@ public class PlayerListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
+        if (player.hasMetadata(MetadataConstants.METADATA_KEY_RUPTURE)) {
+            final RuptureTaskMeta ruptureTaskMeta
+                    = (RuptureTaskMeta) player.getMetadata(
+                    MetadataConstants.METADATA_KEY_RUPTURE).get(0);
+            if (ruptureTaskMeta != null) {
+                final RuptureTask ruptureTimerTask = ruptureTaskMeta.getRuptureTimerTask();
+                ruptureTimerTask.cancel();
+            }
+            player.removeMetadata(MetadataConstants.METADATA_KEY_RUPTURE, mcMMO.p);
+        }
+
         if (!UserManager.hasPlayerDataKey(player)) {
             return;
         }
@@ -615,7 +628,7 @@ public class PlayerListener implements Listener {
         }
 
         //Use a sync save if the server is shutting down to avoid race conditions
-        mmoPlayer.logout(mcMMO.isServerShutdownExecuted());
+        mmoPlayer.logout(player, mcMMO.isServerShutdownExecuted());
         mcMMO.getTransientMetadataTools().cleanLivingEntityMetadata(event.getPlayer());
     }
 
