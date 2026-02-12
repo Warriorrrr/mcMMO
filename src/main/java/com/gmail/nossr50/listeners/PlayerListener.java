@@ -628,7 +628,7 @@ public class PlayerListener implements Listener {
         }
 
         //Use a sync save if the server is shutting down to avoid race conditions
-        mmoPlayer.logout(player, mcMMO.isServerShutdownExecuted());
+        mmoPlayer.logout(mcMMO.isServerShutdownExecuted());
         mcMMO.getTransientMetadataTools().cleanLivingEntityMetadata(event.getPlayer());
     }
 

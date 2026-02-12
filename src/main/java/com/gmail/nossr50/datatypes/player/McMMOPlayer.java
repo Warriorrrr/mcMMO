@@ -1199,7 +1199,8 @@ public class McMMOPlayer implements Identified {
      *
      * @param syncSave if true, data is saved synchronously
      */
-    public void logout(final Player thisPlayer, boolean syncSave) {
+    public void logout(boolean syncSave) {
+        final Player thisPlayer = getPlayer();
         cleanup();
 
         if (syncSave) {
