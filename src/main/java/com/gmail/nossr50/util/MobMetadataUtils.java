@@ -11,20 +11,19 @@ import static com.gmail.nossr50.util.MetadataService.NSK_PLAYER_TAMED_MOB;
 import com.gmail.nossr50.api.exceptions.IncompleteNamespacedKeyRegister;
 import com.gmail.nossr50.config.PersistentDataConfig;
 import com.gmail.nossr50.metadata.MobMetaFlagType;
-import com.google.common.collect.MapMaker;
 import java.util.EnumMap;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 public final class MobMetadataUtils {
-    private static final @NotNull ConcurrentMap<Entity, Set<MobMetaFlagType>> mobRegistry; // transient data
+    private static final @NotNull ConcurrentMap<UUID, Set<MobMetaFlagType>> mobRegistry = new ConcurrentHashMap<>(); // transient data
     private static final @NotNull EnumMap<MobMetaFlagType, NamespacedKey> mobFlagKeyMap; // used for persistent data
     private static boolean isUsingPersistentData = false;
 
@@ -34,13 +33,6 @@ public final class MobMetadataUtils {
 
     static {
         mobFlagKeyMap = new EnumMap<>(MobMetaFlagType.class);
-        // Using Guava for a concurrent weak hash map
-        // IMPORTANT: This type of map uses == for comparison over .equals(),
-        // which is a violation of map contract
-        mobRegistry = new MapMaker()
-                .weakKeys()
-                .concurrencyLevel(4)
-                .makeMap();
 
         initMobFlagKeyMap();
 
@@ -86,7 +78,7 @@ public final class MobMetadataUtils {
             return livingEntity.getPersistentDataContainer()
                     .has(mobFlagKeyMap.get(flag), PersistentDataType.BYTE);
         } else {
-            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity);
+            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity.getUniqueId());
             return flags != null && flags.contains(flag);
         }
     }
@@ -106,7 +98,7 @@ public final class MobMetadataUtils {
             }
             return false;
         } else {
-            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity);
+            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity.getUniqueId());
             return flags != null && !flags.isEmpty();
         }
     }
@@ -131,9 +123,9 @@ public final class MobMetadataUtils {
                 }
             }
         } else {
-            Set<MobMetaFlagType> sourceFlags = mobRegistry.get(sourceEntity);
+            Set<MobMetaFlagType> sourceFlags = mobRegistry.get(sourceEntity.getUniqueId());
             if (sourceFlags != null) {
-                Set<MobMetaFlagType> targetFlags = mobRegistry.computeIfAbsent(targetEntity,
+                Set<MobMetaFlagType> targetFlags = mobRegistry.computeIfAbsent(targetEntity.getUniqueId(),
                         k -> ConcurrentHashMap.newKeySet());
                 targetFlags.addAll(sourceFlags);
             }
@@ -156,7 +148,7 @@ public final class MobMetadataUtils {
                         MetadataConstants.SIMPLE_FLAG_VALUE);
             }
         } else {
-            final Set<MobMetaFlagType> flags = mobRegistry.computeIfAbsent(livingEntity,
+            final Set<MobMetaFlagType> flags = mobRegistry.computeIfAbsent(livingEntity.getUniqueId(),
                     k -> ConcurrentHashMap.newKeySet());
             flags.add(flag);
         }
@@ -176,11 +168,11 @@ public final class MobMetadataUtils {
                 persistentDataContainer.remove(mobFlagKeyMap.get(flag));
             }
         } else {
-            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity);
+            final Set<MobMetaFlagType> flags = mobRegistry.get(livingEntity.getUniqueId());
             if (flags != null) {
                 flags.remove(flag);
                 if (flags.isEmpty()) {
-                    mobRegistry.remove(livingEntity, flags);
+                    mobRegistry.remove(livingEntity.getUniqueId(), flags);
                 }
             }
         }
@@ -196,8 +188,17 @@ public final class MobMetadataUtils {
             for (MobMetaFlagType flag : MobMetaFlagType.values()) {
                 removeMobFlag(flag, livingEntity);
             }
-        } else {
-            mobRegistry.remove(livingEntity);
         }
+
+        mobRegistry.remove(livingEntity.getUniqueId());
+    }
+
+    /**
+     * Removes all mcMMO-related transient mob flags from a {@link LivingEntity}.
+     *
+     * @param livingEntity the target entity
+     */
+    public static void removeTransientMobFlags(final @NotNull LivingEntity livingEntity) {
+        mobRegistry.remove(livingEntity.getUniqueId());
     }
 }

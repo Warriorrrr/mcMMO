@@ -14,7 +14,6 @@ import com.gmail.nossr50.datatypes.skills.subskills.interfaces.InteractType;
 import com.gmail.nossr50.events.fake.FakeEntityTameEvent;
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.metadata.MobMetaFlagType;
-import com.gmail.nossr50.runnables.TravelingBlockMetaCleanup;
 import com.gmail.nossr50.skills.archery.Archery;
 import com.gmail.nossr50.skills.crossbows.Crossbows;
 import com.gmail.nossr50.skills.mining.BlastMining;
@@ -26,6 +25,7 @@ import com.gmail.nossr50.util.BlockUtils;
 import com.gmail.nossr50.util.ItemUtils;
 import com.gmail.nossr50.util.MetadataConstants;
 import com.gmail.nossr50.util.Misc;
+import com.gmail.nossr50.util.MobHealthbarUtils;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.player.NotificationManager;
 import com.gmail.nossr50.util.player.UserManager;
@@ -51,6 +51,7 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Slime;
 import org.bukkit.entity.TNTPrimed;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Trident;
@@ -68,6 +69,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTameEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -78,6 +80,7 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.world.EntitiesUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -272,10 +275,6 @@ public class EntityListener implements Listener {
 
                 entity.setMetadata(MetadataConstants.METADATA_KEY_TRAVELING_BLOCK,
                         MetadataConstants.MCMMO_METADATA_VALUE);
-                TravelingBlockMetaCleanup metaCleanupTask = new TravelingBlockMetaCleanup(entity,
-                        pluginRef);
-                mcMMO.p.getFoliaLib().getScheduler().runAtEntityTimer(entity, metaCleanupTask, 20,
-                        20 * 60); //6000 ticks is 5 minutes
             } else if (isTracked) {
                 BlockUtils.setUnnaturalBlock(block);
                 entity.removeMetadata(MetadataConstants.METADATA_KEY_TRAVELING_BLOCK, pluginRef);
@@ -747,20 +746,32 @@ public class EntityListener implements Listener {
     }
 
     /**
-     * Monitor EntityDeath events.
+     * Monitor EntityRemove events.
      *
      * @param event The event to watch
      */
+    @SuppressWarnings("UnstableApiUsage") // The remove event is not considered experimental in new API versions
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onEntityDeathLowest(EntityDeathEvent event) {
-        final LivingEntity entity = event.getEntity();
+    public void onEntityRemoval(EntityRemoveEvent event) {
+        // Clean up transient entity metadata when they are removed for any reason, including chunk unloads.
+        final Entity entity = event.getEntity();
 
         // Clear metadata for Slimes/Magma Cubes after transformation events take place, otherwise small spawned slimes will not have any tags
-        if (TRANSFORMABLE_ENTITIES.contains(entity.getType())) {
+        if (TRANSFORMABLE_ENTITIES.contains(entity.getType()) && entity instanceof Slime slime && slime.getSize() > 1) {
             return;
         }
 
-        mcMMO.getTransientMetadataTools().cleanLivingEntityMetadata(entity);
+        mcMMO.getTransientMetadataTools().cleanEntityMetadata(entity);
+    }
+
+    @EventHandler
+    public void onEntitiesUnload(EntitiesUnloadEvent event) {
+        for (final Entity entity : event.getEntities()) {
+            if (entity instanceof LivingEntity livingEntity) {
+                // This event fires early enough where we can still modify entity state and modify the display name.
+                MobHealthbarUtils.restoreNameFromSnapshot(livingEntity);
+            }
+        }
     }
 
     /**

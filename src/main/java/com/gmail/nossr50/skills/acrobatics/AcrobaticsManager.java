@@ -126,8 +126,9 @@ public class AcrobaticsManager extends SkillManager {
                                     new FixedMetadataValue(mcMMO.p, count + 1));
                             final Consumer<WrappedTask> metaCleanupTask = new MobDodgeMetaCleanup(mob,
                                     mcMMO.p);
+                            final Runnable retired = () -> mob.removeMetadata(MetadataConstants.METADATA_KEY_DODGE_TRACKER, mcMMO.p);
                             mcMMO.p.getFoliaLib().getScheduler()
-                                    .runAtEntityTimer(mob, metaCleanupTask, 20,
+                                    .runAtEntityTimer(mob, metaCleanupTask, retired, 20,
                                             20 * 60); //one minute
                         }
                     } else {
